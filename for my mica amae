@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HAPPY 9TH MONTH, MY MICA AMAE <3</title>
+<style>
+  :root{
+    --bg:#fff8e6;
+    --accent:#FFF0A6;
+    --shadow: rgba(30,30,30,0.12);
+    font-family: "Allura", sans-serif;
+  }
+  body{
+    margin:0;
+    background: linear-gradient(180deg,var(--bg), #fff3d6);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+  }
+  .wrap{ max-width:1000px; width:100%; transition:opacity 0.8s ease; }
+  h1{ text-align:center; color:#654321; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .card{ perspective:1200px; height:300px; }
+  .inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform 0.7s ease; box-shadow: 0 8px 18px var(--shadow); border-radius:16px; }
+  .card.flipped .inner{ transform: rotateY(180deg) scale(1.02); }
+  .side{ position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; display:flex; align-items:center; justify-content:center; padding:18px; }
+  .front{ background: #fff9f0; flex-direction:column; gap:12px; }
+  .sun{ font-size:72px; animation: sway 3s ease-in-out infinite; }
+  @keyframes sway { 0% { transform: rotate(-6deg) } 50% { transform: rotate(6deg) } 100% { transform: rotate(-6deg) } }
+  .back{ background: #fff8e0; transform: rotateY(180deg); flex-direction:column; gap:12px; }
+  .reveal-emoji{ font-size:56px; }
+  .open-btn{ position:absolute; bottom:14px; left:14px; background:#fff7e6; border:none; padding:8px 10px; border-radius:10px; cursor:pointer; }
+  /* Modal */
+  .modal-backdrop{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.36); }
+  .modal{ background:#fff; padding:18px; border-radius:12px; width:320px; }
+  .modal input{ width:100%; padding:10px; margin-bottom:10px; border:1px solid #eee; border-radius:8px; }
+  .btn{ background:linear-gradient(180deg,var(--accent), #FFF0A6); border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:bold; }
+  .small{ font-size:12px; color:#7a6a54; }
+  /* Love Letter Section */
+  .love-letter{
+    display:none;
+    opacity:0;
+    max-width:600px;
+    background:#fffaf0;
+    border:2px solid #ffe58a;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.1);
+    text-align:center;
+    transition:opacity 1s ease;
+  }
+  .love-letter.show{
+    display:block;
+    opacity:1;
+  }
+  .sunflowers{ font-size:40px; animation: sway 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="flipbook">
+  <h1>HAPPY 9th MONTH, MY MICA AMAE <3</h1>
+  <div class="grid" id="grid"></div>
+  <footer class="small">Every box contains my love, I love you so muchest.</footer>
+</div>
+
+<!-- Love Letter (hidden) -->
+<div class="love-letter" id="loveLetter">
+  <div class="sunflowers">🌻🌻🌻</div>
+  <h1>To my one and only, my life line.</h1>
+  <p>
+    Time do fly as I fall much deeper<br>
+    faster than the speed of light,<br>
+    and for every fall, i know that<br>
+    you would always be there to be my safety net.<br>
+    Loving you brings me so much happiness nothing can ever surpass.<br>
+    <br>
+    I love you so muchest, my dearest, mica amae.
+  </p>
+  <div class="sunflowers">🌻🌻🌻</div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <h3>Unlock my love <3</h3>
+    <p id="modalHint">Enter the password for my love.</p>
+    <input id="pwdInput" type="password" placeholder="Type password..." />
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button id="cancelBtn" class="btn" style="background:#ddd;color:#222;">Cancel</button>
+      <button id="okBtn" class="btn">Open</button>
+    </div>
+    <p id="modalError" class="small" style="color:#68A3D4;display:none;">Mali po, love — try again please.</p>
+  </div>
+</div>
+
+<script>
+const surprises = [
+  {id:1, title:"I", password:"mica", message:"I've always thought that sunflowers suits you, though they would never come as close as being pretty as you. They depicts you so well. As you shine, standout, and such a ray of sunshine. And you don't even know it.", emoji:"🌻"},
+  {id:2, title:"LOVE", password:"mica", message:"You are what you love, and just like the stars-you shne the brightest. You said you are nevous for this school year, but i know that you will just great. Because you always do, my Sirius.", emoji:"⭐️"},
+  {id:3, title:"YOU", password:"mica", message:"Bading ka kasi, hehehehe. Joke lang po mwa mwa mwa. You might feel colorless sometimes, but love, you don't know how much color you bring to everyone you come across with. You are not not these primary ones, but the rather, the pastels. They are as soft as you.", emoji:"🌈"},
+  // Special bouquet
+  {id:4, title:"SO MUCHEST", password:"i love you so muchest", special:true}
+];
+
+const grid = document.getElementById('grid');
+const modal = document.getElementById('modal');
+const pwdInput = document.getElementById('pwdInput');
+const modalHint = document.getElementById('modalHint');
+const modalError = document.getElementById('modalError');
+const flipbook = document.getElementById('flipbook');
+const loveLetter = document.getElementById('loveLetter');
+
+let activeCardId = null;
+
+// Build cards
+surprises.forEach(s => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.id = s.id;
+  card.innerHTML = `
+    <div class="inner">
+      <div class="side front">
+        <div style="text-align:center;">
+          <div class="sun">🌻</div>
+          <div class="title">${s.title}</div>
+          <div class="hint">A little surprise for my baby mica amae.</div>
+        </div>
+        <button class="open-btn">Open</button>
+      </div>
+      <div class="side back">
+        <div class="surprise">
+          <div id="msg-${s.id}">Locked</div>
+          <div class="reveal-emoji" id="emoji-${s.id}"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card);
+  card.querySelector('.open-btn').addEventListener('click', () => openModal(s.id));
+});
+
+function openModal(id){
+  activeCardId = id;
+  modal.style.display = 'flex';
+  modalError.style.display = 'none';
+  pwdInput.value = '';
+  pwdInput.focus();
+  const s = surprises.find(x=>x.id===id);
+  modalHint.textContent = `Enter the password for "${s.title}".`;
+}
+
+function closeModal(){
+  modal.style.display = 'none';
+  activeCardId = null;
+}
+
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+document.getElementById('okBtn').addEventListener('click', tryPassword);
+pwdInput.addEventListener('keydown', e => { if(e.key === 'Enter') tryPassword(); });
+
+function tryPassword(){
+  if(activeCardId === null) return;
+  const guess = pwdInput.value.trim();
+  const s = surprises.find(x=>x.id===activeCardId);
+  if(guess === s.password){
+    closeModal();
+    if(s.special){
+      showLoveLetter();
+    } else {
+      revealCard(s.id, s);
+    }
+  } else {
+    modalError.style.display = 'block';
+  }
+}
+
+function revealCard(id, s){
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  card.classList.add('flipped');
+  document.getElementById(`msg-${id}`).textContent = s.message;
+  document.getElementById(`emoji-${id}`).textContent = s.emoji;
+}
+
+function showLoveLetter(){
+  flipbook.style.opacity = '0';
+  setTimeout(() => {
+    flipbook.style.display = 'none';
+    loveLetter.classList.add('show');
+  }, 800);
+}
+</script>
+</body>
+</html>
